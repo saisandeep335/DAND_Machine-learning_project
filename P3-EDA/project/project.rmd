@@ -1,0 +1,430 @@
+Red Wine Quality Analysis by Saisandeep
+========================================================
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+library(reshape)
+library(plyr)
+library(gridExtra)
+library(ggplot2)
+library(GGally)
+library(knitr)
+library(rprojroot)
+library(rmarkdown)
+```
+
+Loading the dataset: 
+Below are the first few records of the dataset.
+
+```{r echo=FALSE, Load_the_Data}
+# Load the Data
+red_wine_data <- read.csv('C:/Users/Saisandeep/Documents/Udacity Data Analyst/EDA/project/wineQualityReds.csv', header = TRUE)
+
+head(red_wine_data)
+```
+
+Below is the basic statistics on each variable and broad overview of the data.
+
+```{r echo=FALSE, Data_Summary}
+summary(red_wine_data)
+```
+
+Below is the data structure for all the variables and gives us a vague information on what kind of data each variable has.
+```{r echo=FALSE, Data_structure}
+str(red_wine_data)
+```
+
+Below is the plot that gives an overview of all the wine qualities and how they are distributed.
+# Univariate Plots Section
+
+```{r echo=FALSE, Univariate_Plots1}
+ggplot(aes(quality),data = red_wine_data) + 
+  geom_histogram(breaks = c(2,3,4,5,6,7,8),color =I('black'),
+                 fill = I('#099009'))+
+  ggtitle('Quality distribution for Red wine') +
+  labs(x = 'Quality (score between 0 to 10)')
+```
+
+```{r echo=FALSE}
+table(red_wine_data$quality)
+```
+
+From the above analysis of the quality of the wines I can see that most of them have a rating of 5 or 6 and quite a few with the rating of 7. I would like to analyze what are the qulaities that tend to improve the quality of the wine.
+
+```{r echo=FALSE, Univariate_Plots2}
+ggplot(aes(pH),data = red_wine_data) + 
+  geom_histogram(color =I('black'),fill = I('#099009'))+
+  ggtitle('pH distribution for Red wine')
+```
+
+```{r echo=FALSE}
+summary(red_wine_data$pH)
+```
+
+pH is the continuous variable with short range. Most of the wine have 3.0 to 3.7 pH value
+
+```{r echo=FALSE, Univariate_Plots3}
+s1 <- ggplot(aes(alcohol),data = red_wine_data) + 
+  geom_histogram(color =I('black'),fill = I('#099009'))+
+  ggtitle('Alcohol distribution for Red wine')+
+  labs(x = 'alcohol (% by volume)')
+
+s2 <- ggplot(red_wine_data, aes(y = alcohol, x = 1)) +
+  geom_boxplot(color = 'blue') +
+  geom_jitter(aes(x = 1, y = alcohol), alpha = 0.3) +
+  labs(y = 'alcohol (% by volume)', x = '',
+          title = "Alcohol distribution") +
+    coord_flip()
+
+grid.arrange(s1, s2)
+```
+
+Distribution of Alcohol looks sckewed to the right and few outliers and it will be interesting to see how the quality is effected with respect to Alcohol percentage.
+
+
+```{r echo=FALSE, Univariate_Plots4}
+
+ggplot(aes(fixed.acidity),data = red_wine_data) + 
+  geom_histogram(color =I('black'),fill = I('#099009'))+
+  ggtitle('Fixed Acidity distribution for Red wine')+
+  labs(x = 'Fixed Acidity (tartaric acid - g / dm^3)')
+```
+
+Fixed acidity looks normally distributed but has a long tail on the right side. This means there are few wine, which have high acidity.
+
+```{r echo=FALSE, Univariate_Plots5}
+q1 <- ggplot(red_wine_data, aes(x = volatile.acidity)) +
+  geom_histogram(binwidth = 0.01) +
+  labs(x = 'Volatile Acidity (g/L)', y = 'Count',
+          title = "Volatile acidity distribution") 
+
+q2 <- ggplot(red_wine_data, aes(y = volatile.acidity, x = 1)) +
+  geom_boxplot(color = 'blue') +
+  geom_jitter(aes(x = 1, y = volatile.acidity), alpha = 0.3) +
+  labs(y = 'Volatile Acidity (g/L)', x = '',
+          title = "Volatile acidity distribution") +
+  coord_flip()
+
+grid.arrange(q1, q2)
+```
+
+When it comes to Volatile acidity, there are outliters and some look to be really away from the rest of the wine. We need to investigate further if the acidity captured is really true. Also we need to investigate if we can drop one of records like that from the analysis.  
+
+```{r echo=FALSE, Univariate_Plots6}
+r1 <- ggplot(aes(citric.acid),data = red_wine_data) + 
+  geom_histogram(color =I('black'),fill = I('#099009'))+
+  ggtitle('Citric Acid distribution for Red wine')+
+  labs(x = 'Citric acid (g / dm^3)')
+
+r2 <- ggplot(red_wine_data, aes(y = citric.acid, x = 1)) +
+  geom_boxplot(color = 'blue') +
+  geom_jitter(aes(x = 1, y = citric.acid), alpha = 0.3) +
+  labs(y = 'Citric acid (g / dm^3)', x = '',
+          title = "Citric acid distribution") +
+  coord_flip()
+
+grid.arrange(r1, r2)
+```
+
+Citric acid distribution looks very spreadout, with few outliers. Also looks like there are huge number of wine with out any citric acid in them. In later stage if we see any significant affect of citric acid on quality we should be analyzing the wine with and without citric acid separately.
+
+```{r echo=FALSE, Univariate_Plots7}
+ggplot(aes(residual.sugar),data = red_wine_data) + 
+  geom_histogram(color =I('black'),fill = I('#099009'))+
+  ggtitle('Residual Sugar distribution for Red wine')+
+  labs(x = 'Residual sugar (g / dm^3)')
+```
+
+Looks like most of the wine have low residual sugar but there are few outliers with high residual sugar. 
+
+```{r echo=FALSE, Univariate_Plots8}
+ggplot(aes(chlorides),data = red_wine_data) + 
+  geom_histogram(color =I('black'),fill = I('#099009'))+
+  ggtitle('Chlorides distribution for Red wine')+
+  labs(x = 'chlorides (sodium chloride - g / dm^3)')
+```
+
+Sodium chloride concentration levels are distributed normally with a lot of sckewness and outliers.
+
+```{r echo=FALSE, Univariate_Plots9}
+ggplot(aes(free.sulfur.dioxide),data = red_wine_data) + 
+  geom_histogram(color =I('black'),fill = I('#099009'))+
+  ggtitle('Free SO2 distribution for Red wine')+
+  labs(x = 'free sulfur dioxide (mg / dm^3)')
+```
+
+Free SO2 distribution in the wine looks to be having outliers as well and there is sckewness on the right. 
+
+```{r echo=FALSE, Univariate_Plots10}
+ggplot(aes(total.sulfur.dioxide),data = red_wine_data) + 
+  geom_histogram(color =I('black'),fill = I('#099009'))+
+  ggtitle('Total SO2 distribution for Red wine')+
+  labs(x = 'total sulfur dioxide (mg / dm^3)')
+```
+
+The distribution of the total sulphur dioxide is sckewed to the right as well with low values of the total SO2 in the wine.
+
+```{r echo=FALSE, Univariate_Plots11}
+ggplot(aes(density),data = red_wine_data) + 
+  geom_histogram(color =I('black'),fill = I('#099009'))+
+  ggtitle('Density distribution for Red wine')+
+  labs(x = 'density (g / cm^3)')
+```
+
+Looks like Density fo the wine is normally distributed and most of the wine having the mean density close 0.997
+
+```{r echo=FALSE, Univariate_Plots12}
+ggplot(aes(sulphates),data = red_wine_data) + 
+  geom_histogram(color =I('black'),fill = I('#099009'))+
+  ggtitle('Sulphates distribution for Red wine')+
+  labs(x = 'sulphates (potassium sulphate - g / dm3)')
+```
+
+Based on the above graph the sulphate distribution seems to have few outliers.
+
+Based on lot of studines on Wine rating, most of the places say below are 4 factors that determine the quality of the wine. Also based on the preliminary analysis below 4 factors looks intresting for further investigation.
+
+```{r echo=FALSE, Univariate_Plots13}
+p1 <- ggplot(aes(quality),data = red_wine_data) + 
+  geom_histogram(breaks = c(2,3,4,5,6,7,8),color =I('black'),
+                 fill = I('#099009'))+
+  ggtitle('Quality distribution for Red wine') +
+  labs(x = 'Quality (score between 0 to 10)')
+
+p2 <- ggplot(aes(pH),data = red_wine_data) + 
+  geom_histogram(color =I('black'),fill = I('#099009'))+
+  ggtitle('pH distribution for Red wine')
+
+p3 <- ggplot(aes(alcohol),data = red_wine_data) + 
+  geom_histogram(color =I('black'),fill = I('#099009'))+
+  ggtitle('Alcohol distribution for Red wine')+
+  labs(x = 'alcohol (% by volume)')
+
+p4 <- ggplot(aes(total.sulfur.dioxide),data = red_wine_data) + 
+  geom_histogram(color =I('black'),fill = I('#099009'))+
+  ggtitle('Total SO2 distribution for Red wine')
+
+p5 <- ggplot(aes(free.sulfur.dioxide),data = red_wine_data) + 
+  geom_histogram(color =I('black'),fill = I('#099009'))+
+  ggtitle('Free SO2 distribution for Red wine')
+grid.arrange(p1,p2,p3,p4,p5,ncol=2)
+```
+
+# Univariate Analysis
+
+### What is/are the main feature(s) of interest in your dataset?
+1. There is a big range for sulfur.dioxide (both Free and Total) across the samples.
+2. The sample consists of 1599 Red Wine.
+3. The alcohol content varies from 8.00 to 14.90 for the samples in dataset.
+4. The quality of the samples range from 3 to 9 with 6 being the median.
+5. The range for fixed acidity is quite high with minimum being 3.8 and maximum being 15.9,
+6. pH value varies from 2.720 to 4.010 with a median being 3.210.
+
+### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+1. The pH value exhibits quite normal distribution but there are sample which exhibits pH values beyond 3.5 and 4 though the sample size seems to be low here.
+2. The free sulfur dioxide seems to spread between 0 to 120 with peak exhibiting around 50.
+3. The total sulfur dioxide seems to a have a spread between 0 and 250 and exhibiting peak around 150.There seems to be a lower peak exhibited around the 20 mark.
+4. The alcohol content seems to vary from 7 to 14 with major peaks around 10 with a large sample frequency dispayed at higher alcohol levels .
+
+
+# Bivariate Plots Section
+
+
+```{r echo=FALSE, Bivariate_Plots1}
+ggpairs(red_wine_data)
+```
+
+I would like to analyse how the concentration of SO2 with respect to quality.
+
+```{r echo=FALSE, Bivariate_Plots2}
+ggplot(aes(x = factor(quality), y = free.sulfur.dioxide), data = red_wine_data) + 
+  geom_boxplot(color = 'blue')+
+  geom_point(alpha=1/10, position = 'jitter')+
+  ggtitle(' Free SO2 and  Quality Relationship')
+
+```
+
+The above graph, has a boxplot of over all free SO2 and SO2 concentration for each of the quality rating. So I see that the for higher ratings mean seems to be low. Also for the lower ratings we can see low free SO2. We can infer that higher SO2 will reduce the rating but lower SO2 doesnt ensure the increase in rating.
+
+```{r echo=FALSE, Bivariate_Plots3}
+ggplot(aes(x = factor(quality), y = total.sulfur.dioxide), data = red_wine_data) + 
+  geom_boxplot(color = 'blue')+
+  geom_point(alpha=1/10, position = 'jitter')+
+  ggtitle(' Total SO2 and  Quality Relationship')
+
+```
+
+Total SO2 follows similar trend of Free SO2 and the SO2 levels reduce as the rating goes up. 
+
+# Bivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
+
+Free SO2 has positive correlation with Total SO2 and Residual sugar Negative correlation with pH ,sulphates and Alcohol
+
+Total So2 has positive correlation with free so2 and residual sugar Negative correlation with pH,Sulphates and Alcohol
+
+pH has positive correlation with Sulphated,Alcohol and Volatile Acidity Negative correlation with Total and Free SO2, Residual sugar, citric acid, acidity (volatile and Fixed)
+
+Alcohol has positive correlation with pH and quality NEGATIVE Correlation with density, total and free so2, chlorides
+
+Quality has positive correlation with alcohol, sulphates  negative correaltion with density, chlorides, volatile acidity
+
+### What was the strongest relationship you found?
+
+Strongest relationship is between pH and Fixed acidicity.
+
+# Multivariate Plots Section
+
+
+```{r echo=FALSE, Multivariate_Plots1}
+ggplot(aes(x=alcohol), data =red_wine_data) + 
+  geom_density()+
+  facet_wrap(~quality)+
+  ggtitle('Alcohol and  Quality Relationship')+
+  labs(x = ' Alcohol concentration',y = 'Density graph')
+```
+
+From the above graphs the mean of the alcohol concentration increases as the rating of the wine goes up. 
+
+```{r echo=FALSE, Multivariate_Plots2}
+ggplot(aes(x=alcohol,y=pH),data = red_wine_data) + 
+  geom_jitter(alpha=1/10,pch=21,cex=4)+
+  facet_wrap(~quality)+
+  scale_color_brewer(type = 'div')+
+  ggtitle('Alcohol and pH Relationship for each of the quality ratings')+
+  labs(x = 'pH', y = 'Alcohol concentration')
+
+```
+
+From these set of graphs it looks like the rating goes up along with both pH level and the alcohol concentration.
+
+```{r echo=FALSE, Multivariate_Plots3}
+ggplot(aes(x=alcohol,y=density),
+       data = red_wine_data)+
+   geom_line(stat='summary',fun.y=median)+
+  ggtitle('Alcohol content with respect to Density of the Wine')+
+  labs(x = 'Alcohol Concentration', y = 'Density of the wine')
+
+```
+
+Based on the above graph the density of the wine goes down when the alcohol concentration increases. I would like to compare teh variation of other factors with respect to alcohol concentration as well. Below are the graphs for other factors I am inerested in.
+
+```{r echo=FALSE, Multivariate_Plots4}
+
+
+```
+
+Free and total SO2 in the wine seems to not vary with respect the alcohol concentration but the chlorides tend to reduce slightly when the concentration of alcohol increases.
+
+
+```{r echo=FALSE, Multivariate_Plots7}
+b1<-ggplot(aes(x=total.sulfur.dioxide,y=sulphates),
+       data = red_wine_data)+
+   geom_density(stat='summary',fun.y=median)+
+  labs(y = 'Median of Sulphates')
+
+b2<-ggplot(aes(x=total.sulfur.dioxide,y=residual.sugar),
+       data = red_wine_data)+
+   geom_density(stat='summary',fun.y=median)+
+  labs(y = 'Median of Residual Sugar')
+
+grid.arrange(b1,b2,ncol=2)
+
+```
+The above graphs conclude that the sulphates and residual sugar doesn't affect much of the total SO2.
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
+Red wine do not exhibit a Free SO2 level beyond 70 units
+
+The quantity of Residual sugar seems to be on higher after the 150 unit level for Total SO2
+
+Qulaity of the wine is increases with increase in SO2 Content
+
+### Were there any interesting or surprising interactions between features?
+Alcohol conent seems to increase with the density of the wine
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+```{r echo=FALSE, Plot_One}
+s1<-ggplot(aes(x=pH,y=free.sulfur.dioxide),
+       data = red_wine_data)+
+   geom_line(stat='summary',fun.y=median)+
+  labs(y = 'Median of free SO2 (mg / dm^3)')+
+  ggtitle('Median of Free SO2 with pH')
+
+s2<-ggplot(aes(x=pH,y=total.sulfur.dioxide),
+       data = red_wine_data)+
+   geom_line(stat='summary',fun.y=median)+
+  labs(y = 'Median of Total SO2 (mg / dm^3)')+
+  ggtitle('Median of Total SO2 with pH')
+
+grid.arrange(s1,s2,ncol=2)
+```
+
+
+```{r echo=FALSE, Plot_One_1}
+t1<-ggplot(aes(x=pH,y=free.sulfur.dioxide),
+       data = red_wine_data)+
+   geom_line(stat='summary',fun.y=median)+
+  labs(y = 'Median of free SO2 (mg / dm^3)')+
+  xlim(3.5,4.0)
+t2<-ggplot(aes(x=pH,y=total.sulfur.dioxide),
+       data = red_wine_data)+
+   geom_line(stat='summary',fun.y=median)+
+  labs(y = 'Median of Total SO2 (mg / dm^3)')+
+  xlim(3.5,4.0)
+
+grid.arrange(t1,t2,ncol=2)
+```
+
+### Description One
+
+SO2 content seems to increase with pH and I sepcifically explored tail of the above graph to see if I can find out any more detail information. Looks like SO2 increases slights with increase in pH after 3.5
+
+### Plot Two
+```{r echo=FALSE, Plot_Two}
+
+ggplot(aes(x=alcohol,y=free.sulfur.dioxide),
+       data = red_wine_data)+
+   geom_line(stat='summary',fun.y=median)+
+  labs(y = 'Median of free SO2 (mg / dm^3)', x = 'Alcohol (% by volume)')+
+  ggtitle('Alcohol and Free SO2 relationship')
+```
+
+### Description Two
+
+Alcohol seems to have no relationship with SO2 and both have a positive relation with quality and these 2 can be really good factors in predicting the quality of the wine.
+
+### Plot Three
+```{r echo=FALSE, Plot_Three}
+ggplot(aes(x=pH),data =red_wine_data) + 
+  geom_density()+
+  facet_wrap(~quality)+
+  ggtitle('Cummulative Density graph pH values  relationship with Quality')+
+  labs(y = 'Density (count)')
+```
+
+### Description Three
+
+From the above graphs the mean value of the pH seems to decrease with increase in rating. With that said, it is not necessary for wine to have lower pH to get higher rating, we can see a approximately normal curve in each of the rating. 
+------
+
+# Reflection
+pH value is considered an important parameter when determining the quality of the Wine.The analysis over the samples however indicate that there is no specific values of pH which provides bias for quality ratings and a higher density of Red Wine samples did indicate a higher pH values for the same quality ratings.These pH value however was found to be optimum between a value of 3.0 and 3.5. A pH value of higher than 3.5 tends to exhibit a higher SO2 values which can be concern for people with concerns of health issues with SO2. Samples with higher alcohol content did exhibit lower SO2 counts.
+
+Some of the learnings from the analysis were as follows:
+
+It always seemed that pH value was a key factor in detemining the quality of the wines but from the analysis ,it seems that pH value do not exhibit any patterns which can be utilized as akey determinstic variable for wine quality testing by sensory analysis.
+
+From the samples analyzed,the wines with higher Alcohol content exhibited lower SO2 content as compared with samples with lower Alcohol content. 
+
+For the buyer conscious of the sugar content in the wines, as we have seen spikes in the residual sugar for certain ranges of the Free and Total SO2.
+
+A limitation of the current analysis is that the current data consists of samples collected from a specific portugal region. It will be intresting to obtain datasets across various wine making regions to eliminate any bias created by any secific qualities of the product.
+
+During all my analysis toughest part was to pin point he factors that would influence the quality or play a major role in quality of wine. I also had to struggle hard to find out if there is any correlation between the factors I was finding interesting that could be influencing the quality of the wine.
